@@ -40,7 +40,7 @@ def clear_frame():
         for widget in master.winfo_children():
             widget.destroy()
 
-def LoginScreen():
+def MainScreen():
     clear_frame()
     heading=tk.CTkLabel(master, text='The Travel Agency',height=30,font=('Times New Roman',50))
     heading.pack(pady=20)
@@ -61,7 +61,7 @@ def LoginScreen():
     tst=tk.CTkLabel(master,text='')
     tst.pack(pady=20)
 
-LoginScreen()
+MainScreen()
 
 
 master.mainloop()
