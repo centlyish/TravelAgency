@@ -1,7 +1,7 @@
 import customtkinter as tk
 import mysql.connector as sql
 
-#mycon=sql.connect(host='localhost',user='root',passwd='1864',database='juno')
+#mycon=sql.connect(host='',user='frienduser',passwd='1864',database='juno')
 #mycur=mycon.cursor()
       
 tk.set_default_color_theme('green')
@@ -25,12 +25,11 @@ def adminPanel():
 def adminLogin():
     clear_frame()
     MainPage=tk.CTkLabel(master,text='Admin Login',height=50,font=('Times New Roman',50)).pack(pady=0)
-    user=tk.CTkLabel(master,text='Username',height=20,font=('Times New Roman',35)).pack(pady=10)
-
+    user=tk.CTkLabel(master,text='Username',height=20,font=('Times New Roman',25)).pack(pady=5)
     username=tk.CTkEntry(master,placeholder_text='Enter username',corner_radius=15,
                         height=35,width=200)
     username.pack(pady=10)
-    passwr=tk.CTkLabel(master,text='Password',height=20,font=('Times New Roman',35))
+    passwr=tk.CTkLabel(master,text='Password',height=20,font=('Times New Roman',25)).pack(pady=5)
     password=tk.CTkEntry(master,placeholder_text='Enter password',corner_radius=15,
                         height=35,width=200,show='*')
     password.pack(pady=10)
@@ -49,10 +48,9 @@ def verify_admin(username,password):
         lb1=tk.CTkLabel(master,text="Login Failed. Invalid username or password! Try Again!").pack()
         
 
-
 def user():
     clear_frame()
-    MainPage=tk.CTkLabel(master,text='User LOgin').pack(pady=30)
+    MainPage=tk.CTkLabel(master,text='Customer Page',height=50,font=('Times New Roman',50)).pack(pady=0)
     back=tk.CTkButton(master,text='Back',command=LoginScreen).pack(pady=30)
 
 def clear_frame():
@@ -76,6 +74,4 @@ def LoginScreen():
     tst=tk.CTkLabel(master,text='').pack(pady=20)
 
 LoginScreen()
-
-
 master.mainloop()
