@@ -1,13 +1,19 @@
 import customtkinter as tk
 import mysql.connector as sql
 
-mycon=sql.connect(host='localhost',user='root',passwd='1864',database='juno')
-mycur=mycon.cursor()
+#mycon=sql.connect(host='localhost',user='root',passwd='1864',database='juno')
+#mycur=mycon.cursor()
       
 tk.set_default_color_theme('green')
 master=tk.CTk()
 master.title('Travel Agency')
 master.geometry('500x500')
+
+admin_credentials = {
+    'ajmal': 'ajmal',
+    'sreedev': 'sreedev',
+    'anirudh': 'anirudh'
+}
 
 def admin():
     clear_frame()
@@ -18,9 +24,18 @@ def admin():
                         height=35,width=200).pack(pady=10)
     passwr=tk.CTkLabel(master,text='Password',height=20,font=('Times New Roman',35)).pack(pady=10)
     password=tk.CTkEntry(master,placeholder_text='Enter password',corner_radius=15,
-                        height=35,width=200).pack(pady=10)
-    submit=tk.CTkButton(master,text='Submit').pack(pady=10)
+                        height=35,width=200,show='*').pack(pady=10)
+    submit = tk.CTkButton(master, text='Submit', command=lambda: verify_admin(usrname_entry.get(), password_entry.get()))
+    submit.pack(pady=10)
     back=tk.CTkButton(master,text='Back',command=LoginScreen).pack(pady=10)
+
+# Admin verification function
+def verify_admin(username, password):
+    if username in admin_credentials and admin_credentials[username] == password:
+        messagebox.showinfo("Login Success", f"Welcome, {username}!")
+        # You can redirect to the admin panel here
+    else:
+        messagebox.showerror("Login Failed", "Invalid username or password!")
 
 def user():
     clear_frame()
