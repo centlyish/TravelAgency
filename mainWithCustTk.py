@@ -11,31 +11,44 @@ master.geometry('500x500')
 
 admin_credentials = {
     'ajmal': 'ajmal',
-    'sreedev': 'sreedev',
+    'sridev': 'sridev',
     'anirudh': 'anirudh'
 }
 
-def admin():
+def adminPanel():
+     clear_frame()
+     lb1=tk.CTkLabel(master, text='admin').pack()
+     back=tk.CTkButton(master, text='Back',command=LoginScreen).pack(pady=10)
+     #make the admin panel!!
+
+
+def adminLogin():
     clear_frame()
     MainPage=tk.CTkLabel(master,text='Admin Login',height=50,font=('Times New Roman',50)).pack(pady=0)
     user=tk.CTkLabel(master,text='Username',height=20,font=('Times New Roman',35)).pack(pady=10)
 
-    usrname=tk.CTkEntry(master,placeholder_text='Enter username',corner_radius=15,
-                        height=35,width=200).pack(pady=10)
-    passwr=tk.CTkLabel(master,text='Password',height=20,font=('Times New Roman',35)).pack(pady=10)
+    username=tk.CTkEntry(master,placeholder_text='Enter username',corner_radius=15,
+                        height=35,width=200)
+    username.pack(pady=10)
+    passwr=tk.CTkLabel(master,text='Password',height=20,font=('Times New Roman',35))
     password=tk.CTkEntry(master,placeholder_text='Enter password',corner_radius=15,
-                        height=35,width=200,show='*').pack(pady=10)
-    submit = tk.CTkButton(master, text='Submit', command=lambda: verify_admin(usrname_entry.get(), password_entry.get()))
+                        height=35,width=200,show='*')
+    password.pack(pady=10)
+    submit = tk.CTkButton(master, text='Submit',command=lambda: verify_admin(username.get(),password.get()))
     submit.pack(pady=10)
     back=tk.CTkButton(master,text='Back',command=LoginScreen).pack(pady=10)
 
 # Admin verification function
-def verify_admin(username, password):
+def verify_admin(username,password):
     if username in admin_credentials and admin_credentials[username] == password:
-        messagebox.showinfo("Login Success", f"Welcome, {username}!")
+        lb1=tk.CTkLabel(master,text=f"Login Success, Welcome, {username}!").pack()
+        adminPanel()
         # You can redirect to the admin panel here
     else:
-        messagebox.showerror("Login Failed", "Invalid username or password!")
+        adminLogin()
+        lb1=tk.CTkLabel(master,text="Login Failed. Invalid username or password! Try Again!").pack()
+        
+
 
 def user():
     clear_frame()
@@ -53,7 +66,7 @@ def LoginScreen():
     chooseUsr=tk.CTkLabel(master, text='Choose the user',height=25,font=('Times New Roman',25)).pack(pady=20)
 
     adminBtn=tk.CTkButton(master,text='Admin',text_color=('black'),
-                    corner_radius=20,height=40,command=admin,
+                    corner_radius=20,height=40,command=adminLogin,
                     width=170,font=('Helvetica', 20)).pack(pady=20)
 
     userBtn=tk.CTkButton(master,text='Customer',height=40,width=170,command=user,
