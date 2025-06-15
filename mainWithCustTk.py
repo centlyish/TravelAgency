@@ -7,18 +7,42 @@ import mysql.connector as sql
 tk.set_default_color_theme('green')
 master=tk.CTk()
 master.title('Travel Agency')
-master.geometry('500x500')
+master.geometry('700x600')
 
 admin_credentials = {
     'ajmal': 'ajmal',
-    'sridev': 'sridev',
+    's': 's',
     'anirudh': 'anirudh'
 }
 
+def insertPackage():
+     #inserting
+     pass
+
 def adminPanel():
      clear_frame()
-     lb1=tk.CTkLabel(master, text='admin').pack()
-     back=tk.CTkButton(master, text='Back',command=LoginScreen).pack(pady=10)
+     lb1=tk.CTkLabel(master, text='Admin',font=('Courier New',35)).pack(pady=10)
+     main_frame=tk.CTkFrame(master,width=400,height=300)
+     main_frame.pack(padx=10,pady=20)
+     main_frame.place(x=15,y=70)
+     lb2=tk.CTkLabel(main_frame, text='Add Packages',font=('Impact',20),anchor='w',justify='left')
+     lb2.place(x=15,y=10)
+     name=tk.CTkEntry(main_frame,placeholder_text='Enter name of Package')
+     name.pack()
+     name.place(x=15,y=50)
+     price=tk.CTkEntry(main_frame,placeholder_text='Price')
+     price.pack()
+     price.place(x=15,y=100)
+     date=tk.CTkEntry(main_frame,placeholder_text='Enter date (YYYY-MM-DD)')
+     date.pack()
+     date.place(x=15,y=150)
+     airlines=tk.CTkEntry(main_frame,placeholder_text='Airlines')
+     airlines.pack()
+     airlines.place(x=15,y=200)
+     submit=tk.CTkButton(main_frame,text='Submit',command=insertPackage,width=100)
+     submit.place(x=15,y=250)
+     back=tk.CTkButton(master, text='Back',command=LoginScreen,anchor='center')
+     back.place(x=350,y=300)
      #make the admin panel!!
 
 
