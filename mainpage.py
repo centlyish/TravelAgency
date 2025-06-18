@@ -1,33 +1,122 @@
-import tkinter as tk
-window=tk.Tk()
-window.title("**** TRAVELS")
-window.geometry("1024x640")
-label = tk.Label(window, text="Choose the user", font=("Arial", 14))
-label.pack()
-def show_main_menu():
-    for widget in window.winfo_children():
-        widget.destroy()
-    label = tk.Label(window, text="Choose the user", font=("Arial", 14))
-    label.pack()
-    bt1=tk.Button(window,text="Admin",command=admin_screen)
-    bt1.pack()
-    bt2=tk.Button(window,text="customer",comman=customer_screen)
-    bt2.pack()
-def admin_screen():
-    for widget in window.winfo_children():
-        widget.destroy()
-    tk.Label(window, text="Admin Login", font=("Arial", 16)).pack()
-    tk.Label(window, text="Username").pack()
-    tk.Entry(window).pack()
-    tk.Label(window, text="Password").pack()
-    tk.Entry(window, show='*').pack()
-    tk.Button(window, text="Back", command=show_main_menu).pack()
-def customer_screen():
-     for widget in window.winfo_children():
-        widget.destroy()
-     tk.Button(window, text="Back", command=show_main_menu).pack()
-bt1=tk.Button(window,text="Admin",command=admin_screen)
-bt1.pack()
-bt2=tk.Button(window,text="customer",command=customer_screen)
-bt2.pack()
-window.mainloop()
+import customtkinter as tk
+import mysql.connector as sql
+
+mycon=sql.connect(host='localhost',user='root',passwd='1864',database='ait')
+mycur=mycon.cursor()
+      
+tk.set_default_color_theme('green')
+master=tk.CTk()
+master.title('Travel Agency')
+master.geometry('700x600')
+
+admin_credentials = {
+    'ajmal': 'ajmal',
+    's': 's',
+    'anirudh': 'anirudh'
+}
+    
+
+def adminPanel():
+    clear_frame()
+    def view_edit_pack():
+        def removePackage():
+            mycur.execute('delete from packages where package_name=(%s)',())
+            mycon.commit()
+        def insertPackage():
+            mycur.execute('insert into packages (Package_name,date,price) values (%s,%s,%s)',(name.get(),date.get(),int(price.get())))
+            mycon.commit()
+            tk.CTkLabel(master,text='')
+        clear_frame()
+
+        
+        main_frame=tk.CTkFrame(master,width=400,height=300)
+        main_frame.pack()
+        tk.CTkLabel(main_frame, text='Add Packages',font=('Impact',20)).pack()
+        name=tk.CTkEntry(main_frame,placeholder_text='Enter name of Package')
+        name.pack()
+        price=tk.CTkEntry(main_frame,placeholder_text='Price')
+        price.pack()
+        date=tk.CTkEntry(main_frame,placeholder_text='Enter date (YYYY-MM-DD)')
+        date.pack()
+        airlines=tk.CTkEntry(main_frame,placeholder_text='Airlines')
+        airlines.pack()
+        submit=tk.CTkButton(main_frame,text='Submit',command=insertPackage,width=100)
+        submit.pack()
+        back=tk.CTkButton(master, text='Back',command=adminPanel,text_color=('black'))
+        back.pack(pady=55)
+    def view_edit_book():
+        clear_frame()
+
+
+        back=tk.CTkButton(master, text='Back',command=adminPanel,text_color=('black'))
+        back.pack(pady=55)
+    def view_cust():
+        clear_frame()
+
+
+        back=tk.CTkButton(master, text='Back',command=adminPanel,text_color=('black'))
+        back.pack(pady=55)
+    tk.CTkLabel(master, text='Admin',font=('Courier New',35)).pack(pady=20)
+    tk.CTkButton(master,text='View/Edit Packages',font=('Times New Roman',20),command=view_edit_pack,text_color=('black'),width=150,height=40).pack(pady=10)
+    tk.CTkButton(master,text='View/Edit Bookings',font=('Times New Roman',20),command=view_edit_book,text_color=('black'),width=150,height=40).pack(pady=10)
+    tk.CTkButton(master,text='View customer details',font=('Times New Roman',20),command=view_cust,text_color=('black'),width=150,height=40).pack(pady=10)
+    
+    back=tk.CTkButton(master, text='Back',command=LoginScreen,text_color=('black'))
+    back.pack(pady=55)
+    
+    
+
+
+def adminLogin():
+    clear_frame()
+    tk.CTkLabel(master,text='Admin Login',height=50,font=('Times New Roman',50)).pack(pady=0)
+    tk.CTkLabel(master,text='Username',height=20,font=('Times New Roman',25)).pack(pady=5)
+    username=tk.CTkEntry(master,placeholder_text='Enter username',corner_radius=15,
+                        height=35,width=200)
+    username.pack(pady=10)
+    tk.CTkLabel(master,text='Password',height=20,font=('Times New Roman',25)).pack(pady=5)
+    password=tk.CTkEntry(master,placeholder_text='Enter password',corner_radius=15,
+                        height=35,width=200,show='*')
+    password.pack(pady=10)
+    submit = tk.CTkButton(master, text='Submit',text_color=('black'),command=lambda: verify_admin(username.get(),password.get()))
+    submit.pack(pady=10)
+    back=tk.CTkButton(master,text_color=('black'),text='Back',command=LoginScreen).pack(pady=10)
+
+# Admin verification function
+def verify_admin(username,password):
+    if username in admin_credentials and admin_credentials[username] == password:
+        tk.CTkLabel(master,text=f"Login Success, Welcome, {username}!").pack()
+        adminPanel()
+        # You can redirect to the admin panel here
+    else:
+        adminLogin()
+        tk.CTkLabel(master,text="Login Failed. Invalid username or password! Try Again!").pack()
+        
+
+def user():
+    clear_frame()
+    tk.CTkLabel(master,text='Customer Page',height=50,font=('Times New Roman',50)).pack(pady=0)
+    tk.CTkButton(master,text='Back',text_color=('black'),command=LoginScreen).pack(pady=30)
+
+def clear_frame():
+        for widget in master.winfo_children():
+            widget.destroy()
+
+def LoginScreen():
+    clear_frame()
+    tk.CTkLabel(master, text='The Travel Agency',height=30,font=('Times New Roman',50)).pack(pady=20)
+
+    tk.CTkLabel(master, text='Choose the user',height=25,font=('Times New Roman',25)).pack(pady=20)
+
+    tk.CTkButton(master,text='Admin',text_color=('black'),
+                    corner_radius=20,height=40,command=adminLogin,
+                    width=170,font=('Helvetica', 20)).pack(pady=20)
+
+    tk.CTkButton(master,text='Customer',height=40,width=170,command=user,
+                    text_color=('black'),corner_radius=20,
+                    font=('Monotone',20)).pack(pady=20)
+
+    tst=tk.CTkLabel(master,text='').pack(pady=20)
+
+LoginScreen()
+master.mainloop()
