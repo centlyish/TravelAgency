@@ -28,8 +28,15 @@ def adminPanel():
     def view_edit_pack():
         clear_frame()
         def removePackage():
-            mycur.execute('delete from packages where package_name=(%s)',())
-            mycon.commit()
+            checkID()
+            if int(removeID.get()) in ids:
+                mycur.execute('delete from packages where ID=(%s)',(int(removeID.get()),))
+                mycon.commit()
+                view_edit_pack() 
+                tk.CTkLabel(master,text='Package successfully deleted!').pack()       
+            else:               
+                view_edit_pack() 
+                tk.CTkLabel(master,text='The ID entered has not been made yet!').pack()
         def insertPackage():
             checkID()
             if int(id.get()) in ids:
@@ -38,7 +45,8 @@ def adminPanel():
             else:          
                 mycur.execute('insert into packages (ID, Package_name,date,price) values (%s,%s,%s,%s)',(int(id.get()),name.get(),date.get(),int(price.get())))
                 mycon.commit()
-                tk.CTkLabel(master,text='')        
+                view_edit_pack()
+                tk.CTkLabel(master,text='Package successfully entered!').pack()        
         main_frame=tk.CTkFrame(master,width=400,height=300)
         main_frame.pack()
         tk.CTkLabel(main_frame, text='Add Packages',font=('Impact',20)).pack()
@@ -50,9 +58,14 @@ def adminPanel():
         price.pack()
         date=tk.CTkEntry(main_frame,placeholder_text='Enter date (YYYY-MM-DD)')
         date.pack()
-        airlines=tk.CTkEntry(main_frame,placeholder_text='Airlines')
-        airlines.pack()
         submit=tk.CTkButton(main_frame,text='Submit',command=insertPackage,width=100)
+        submit.pack()
+        remove_frame=tk.CTkFrame(master,width=400,height=300)
+        remove_frame.pack()
+        tk.CTkLabel(remove_frame, text='Remove Packages',font=('Impact',20)).pack()
+        removeID=tk.CTkEntry(remove_frame,placeholder_text='Enter the ID of package')
+        removeID.pack()
+        submit=tk.CTkButton(remove_frame,text='Submit',command=removePackage,width=100)
         submit.pack()
         back=tk.CTkButton(master, text='Back',command=adminPanel,text_color=('black'))
         back.pack(pady=55)
