@@ -14,24 +14,36 @@ admin_credentials = {
     's': 's',
     'anirudh': 'anirudh'
 }
-    
+
+def checkID():
+    global ids
+    mycur.execute('select ID from packages')
+    s=mycur.fetchall() 
+    ids=[]
+    for i in range(0,len(s)):
+        ids.append(s[i][0])
 
 def adminPanel():
     clear_frame()
     def view_edit_pack():
+        clear_frame()
         def removePackage():
             mycur.execute('delete from packages where package_name=(%s)',())
             mycon.commit()
         def insertPackage():
-            mycur.execute('insert into packages (Package_name,date,price) values (%s,%s,%s)',(name.get(),date.get(),int(price.get())))
-            mycon.commit()
-            tk.CTkLabel(master,text='')
-        clear_frame()
-
-        
+            checkID()
+            if int(id.get()) in ids:
+                view_edit_pack() 
+                tk.CTkLabel(master,text='ID is already selected, please try again!').pack()             
+            else:          
+                mycur.execute('insert into packages (ID, Package_name,date,price) values (%s,%s,%s,%s)',(int(id.get()),name.get(),date.get(),int(price.get())))
+                mycon.commit()
+                tk.CTkLabel(master,text='')        
         main_frame=tk.CTkFrame(master,width=400,height=300)
         main_frame.pack()
         tk.CTkLabel(main_frame, text='Add Packages',font=('Impact',20)).pack()
+        id=tk.CTkEntry(main_frame,placeholder_text='Enter ID')
+        id.pack()
         name=tk.CTkEntry(main_frame,placeholder_text='Enter name of Package')
         name.pack()
         price=tk.CTkEntry(main_frame,placeholder_text='Price')
@@ -87,7 +99,6 @@ def verify_admin(username,password):
     if username in admin_credentials and admin_credentials[username] == password:
         tk.CTkLabel(master,text=f"Login Success, Welcome, {username}!").pack()
         adminPanel()
-        # You can redirect to the admin panel here
     else:
         adminLogin()
         tk.CTkLabel(master,text="Login Failed. Invalid username or password! Try Again!").pack()
