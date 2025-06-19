@@ -2,7 +2,7 @@ create database AIT;
 use AIT;
 create table Bookings(ID int primary key,Name varchar(50),Phone int,Email varchar(50), Package_Selected varchar(100), Date varchar(100),Package_ID int);
 create table Packages(ID int primary key, Package_name varchar(100),Price int, date varchar(50));
- insert into Packages values(1,'Kerala-Gods own country','24/3/2024-28/5/2024',20000 ),
+insert into Packages values(1,'Kerala-Gods own country','24/3/2024-28/5/2024',20000 ),
                             (2,'Rajasthan Odyssey','4/11/2024-8/11/2024',45000),
                             (3,'Goa Getaway','5/2/2024-25/2/2024',30000),
                             (4,'Meghalaya Mystique','5/3/2024-9/3/2024',10000),
