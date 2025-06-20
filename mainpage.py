@@ -1,3 +1,5 @@
+import tkinter as tki
+from tkinter import ttk
 import customtkinter as tk
 import mysql.connector as sql
 
@@ -15,6 +17,16 @@ admin_credentials = {
     'anirudh': 'anirudh'
 }
 
+style=ttk.Style()
+style.theme_use('default')
+style.configure('Treeview',background='#121212',foreground='white',rowheight=25,fieldbackground="#3d3d3d",font=('Arial',15))
+style.configure('Treeview.Heading',background="#373535",font=('Times New Roman',20, 'bold'),relief='flat')
+
+def getAllData():
+    global data
+    mycur.execute('select * from packages')
+    data=mycur.fetchall()
+
 def checkID():
     global ids
     mycur.execute('select ID from packages')
@@ -27,6 +39,19 @@ def adminPanel():
     clear_frame()
     def view_edit_pack():
         clear_frame()
+        packtable = ttk.Treeview(master,columns=('ID','Package_name','date','Price'),show='headings')
+        packtable.heading('ID',text='ID')
+        packtable.heading('Package_name',text='Package name')
+        packtable.heading('date',text='date')
+        packtable.heading('Price',text='Price')
+        packtable.column('ID',width=50)
+        packtable.column('Package_name',width=350)
+        packtable.column('date',width=250)
+        packtable.column('Price',width=150)
+        getAllData()
+        for i in range(0,len(data)):
+            packtable.insert('','end',values=(data[i][0],data[i][1],data[i][2],data[i][3]))
+        packtable.pack()
         def removePackage():
             checkID()
             if int(removeID.get()) in ids:
