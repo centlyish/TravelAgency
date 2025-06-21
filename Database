@@ -1,6 +1,6 @@
 create database AIT;
 use AIT;
-create table Bookings(ID int primary key,Name varchar(50),Phone int,Email varchar(50), Package_Selected varchar(100), Date varchar(100),Package_ID int);
+create table Bookings(ID int primary key,Name varchar(50),Phone int,Email varchar(50), Package_ID int, Date varchar(100),Package_ID int);
 create table Packages(ID int primary key, Package_name varchar(100), date varchar(50),Price int);
 insert into Packages values(1,'Kerala-Gods own country','24/3/2024-28/5/2024',20000 ),
                             (2,'Rajasthan Odyssey','4/11/2024-8/11/2024',45000),
