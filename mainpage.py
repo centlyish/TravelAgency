@@ -9,7 +9,11 @@ mycur=mycon.cursor()
 tk.set_default_color_theme('green')
 master=tk.CTk()
 master.title('Travel Agency')
-master.geometry('700x600')
+master.geometry('1000x700')
+
+def clear_frame():
+        for widget in master.winfo_children():
+            widget.destroy()
 
 admin_credentials = {
     'ajmal': 'ajmal',
@@ -39,7 +43,14 @@ def adminPanel():
     clear_frame()
     def view_edit_pack():
         clear_frame()
-        packtable = ttk.Treeview(master,columns=('ID','Package_name','date','Price'),show='headings')
+        tk.CTkLabel(master,text='Package Editing',font=('Times New Roman',40)).pack()
+        table_frame=tk.CTkFrame(master,width=850,height=700)
+        table_frame.place(x=300,y=150)
+        packtable = ttk.Treeview(table_frame,columns=('ID','Package_name','date','Price'),show='headings')
+        scrollbar=ttk.Scrollbar(table_frame,orient='vertical',command=packtable.yview)
+        packtable.configure(yscrollcommand=scrollbar.set)
+        packtable.pack(expand=True)
+        scrollbar.pack(side='right',fill='y')
         packtable.heading('ID',text='ID')
         packtable.heading('Package_name',text='Package name')
         packtable.heading('date',text='date')
@@ -51,29 +62,29 @@ def adminPanel():
         getAllData()
         for i in range(0,len(data)):
             packtable.insert('','end',values=(data[i][0],data[i][1],data[i][2],data[i][3]))
-        packtable.pack()
         def removePackage():
             checkID()
             if int(removeID.get()) in ids:
                 mycur.execute('delete from packages where ID=(%s)',(int(removeID.get()),))
                 mycon.commit()
                 view_edit_pack() 
-                tk.CTkLabel(master,text='Package successfully deleted!').pack()       
+                tk.CTkLabel(master,text='Package successfully deleted!').place(x=60,y=500)       
             else:               
                 view_edit_pack() 
-                tk.CTkLabel(master,text='The ID entered has not been made yet!').pack()
+                tk.CTkLabel(master,text='The ID entered has not been made yet!').place(x=60,y=500)
         def insertPackage():
             checkID()
             if int(id.get()) in ids:
                 view_edit_pack() 
-                tk.CTkLabel(master,text='ID is already selected, please try again!').pack()             
+                tk.CTkLabel(master,text='ID is already selected, please try again!').place(x=60,y=275)             
             else:          
                 mycur.execute('insert into packages (ID, Package_name,date,price) values (%s,%s,%s,%s)',(int(id.get()),name.get(),date.get(),int(price.get())))
                 mycon.commit()
                 view_edit_pack()
-                tk.CTkLabel(master,text='Package successfully entered!').pack()        
+                tk.CTkLabel(master,text='Package successfully entered!').place(x=60,y=275)        
         main_frame=tk.CTkFrame(master,width=400,height=300)
         main_frame.pack()
+        main_frame.place(x=100,y=100)
         tk.CTkLabel(main_frame, text='Add Packages',font=('Impact',20)).pack()
         id=tk.CTkEntry(main_frame,placeholder_text='Enter ID')
         id.pack()
@@ -87,16 +98,17 @@ def adminPanel():
         submit.pack()
         remove_frame=tk.CTkFrame(master,width=400,height=300)
         remove_frame.pack()
+        remove_frame.place(x=100,y=400)
         tk.CTkLabel(remove_frame, text='Remove Packages',font=('Impact',20)).pack()
         removeID=tk.CTkEntry(remove_frame,placeholder_text='Enter the ID of package')
         removeID.pack()
         submit=tk.CTkButton(remove_frame,text='Submit',command=removePackage,width=100)
         submit.pack()
         back=tk.CTkButton(master, text='Back',command=adminPanel,text_color=('black'))
-        back.pack(pady=55)
+        back.place(x=450,y=500)
     def view_edit_book():
         clear_frame()
-
+        tk.CTkLabel(master,text='Bookings Edtiing',font=('Times New Roman',40)).pack()
 
         back=tk.CTkButton(master, text='Back',command=adminPanel,text_color=('black'))
         back.pack(pady=55)
@@ -113,10 +125,7 @@ def adminPanel():
     
     back=tk.CTkButton(master, text='Back',command=LoginScreen,text_color=('black'))
     back.pack(pady=55)
-    
-    
-
-
+        
 def adminLogin():
     clear_frame()
     tk.CTkLabel(master,text='Admin Login',height=50,font=('Times New Roman',50)).pack(pady=0)
@@ -132,7 +141,6 @@ def adminLogin():
     submit.pack(pady=10)
     back=tk.CTkButton(master,text_color=('black'),text='Back',command=LoginScreen).pack(pady=10)
 
-# Admin verification function
 def verify_admin(username,password):
     if username in admin_credentials and admin_credentials[username] == password:
         tk.CTkLabel(master,text=f"Login Success, Welcome, {username}!").pack()
@@ -141,15 +149,12 @@ def verify_admin(username,password):
         adminLogin()
         tk.CTkLabel(master,text="Login Failed. Invalid username or password! Try Again!").pack()
         
-
 def user():
     clear_frame()
     tk.CTkLabel(master,text='Customer Page',height=50,font=('Times New Roman',50)).pack(pady=0)
     tk.CTkButton(master,text='Back',text_color=('black'),command=LoginScreen).pack(pady=30)
 
-def clear_frame():
-        for widget in master.winfo_children():
-            widget.destroy()
+
 
 def LoginScreen():
     clear_frame()
