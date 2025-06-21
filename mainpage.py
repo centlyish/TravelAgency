@@ -27,9 +27,12 @@ style.configure('Treeview',background='#121212',foreground='white',rowheight=25,
 style.configure('Treeview.Heading',background="#373535",font=('Times New Roman',20, 'bold'),relief='flat')
 
 def getAllData():
-    global data
+    global datap
+    global datab
     mycur.execute('select * from packages')
-    data=mycur.fetchall()
+    datap=mycur.fetchall()
+    mycur.execute('select * from bookings')
+    datab=mycur.fetchall()
 
 def checkID():
     global ids
@@ -60,8 +63,8 @@ def adminPanel():
         packtable.column('date',width=250)
         packtable.column('Price',width=150)
         getAllData()
-        for i in range(0,len(data)):
-            packtable.insert('','end',values=(data[i][0],data[i][1],data[i][2],data[i][3]))
+        for i in range(0,len(datap)):
+            packtable.insert('','end',values=(datap[i][0],datap[i][1],datap[i][2],datap[i][3]))
         def removePackage():
             checkID()
             if int(removeID.get()) in ids:
@@ -106,10 +109,31 @@ def adminPanel():
         submit.pack()
         back=tk.CTkButton(master, text='Back',command=adminPanel,text_color=('black'))
         back.place(x=450,y=500)
-    def view_edit_book():
+    def view_book():
         clear_frame()
-        tk.CTkLabel(master,text='Bookings Edtiing',font=('Times New Roman',40)).pack()
-
+        tk.CTkLabel(master,text='Bookings',font=('Times New Roman',40)).pack()
+        table_frame=tk.CTkFrame(master,width=850,height=700)
+        table_frame.place(x=300,y=150)
+        packtable = ttk.Treeview(table_frame,columns=('ID','Name','Phone','Email','Package_ID','Date'),show='headings')
+        scrollbar=ttk.Scrollbar(table_frame,orient='vertical',command=packtable.yview)
+        packtable.configure(yscrollcommand=scrollbar.set)
+        packtable.pack(expand=True)
+        scrollbar.pack(side='right',fill='y')
+        packtable.heading('ID',text='ID')
+        packtable.heading('Name',text='Name')
+        packtable.heading('Phone',text='Phone')
+        packtable.heading('Email',text='Email')
+        packtable.heading('Package_ID',text='Package ID')
+        packtable.heading('Date',text='Date')
+        packtable.column('ID',width=50)  
+        packtable.column('Name',width=150)
+        packtable.column('Phone',width=150)
+        packtable.column('Email',width=200)
+        packtable.column('Package_ID',width=150)
+        packtable.column('Date',width=250)   
+        getAllData()
+        for i in range(0,len(datab)):
+            packtable.insert('','end',values=(datab[i][0],datab[i][1],datab[i][2],datab[i][3],datab[i][4],datab[i][5]))
         back=tk.CTkButton(master, text='Back',command=adminPanel,text_color=('black'))
         back.pack(pady=55)
     def view_cust():
@@ -120,7 +144,7 @@ def adminPanel():
         back.pack(pady=55)
     tk.CTkLabel(master, text='Admin',font=('Courier New',35)).pack(pady=20)
     tk.CTkButton(master,text='View/Edit Packages',font=('Times New Roman',20),command=view_edit_pack,text_color=('black'),width=150,height=40).pack(pady=10)
-    tk.CTkButton(master,text='View/Edit Bookings',font=('Times New Roman',20),command=view_edit_book,text_color=('black'),width=150,height=40).pack(pady=10)
+    tk.CTkButton(master,text='View Bookings',font=('Times New Roman',20),command=view_book,text_color=('black'),width=150,height=40).pack(pady=10)
     tk.CTkButton(master,text='View customer details',font=('Times New Roman',20),command=view_cust,text_color=('black'),width=150,height=40).pack(pady=10)
     
     back=tk.CTkButton(master, text='Back',command=LoginScreen,text_color=('black'))
@@ -155,7 +179,6 @@ def user():
     tk.CTkButton(master,text='Back',text_color=('black'),command=LoginScreen).pack(pady=30)
 
 
-
 def LoginScreen():
     clear_frame()
     tk.CTkLabel(master, text='The Travel Agency',height=30,font=('Times New Roman',50)).pack(pady=20)
@@ -169,8 +192,6 @@ def LoginScreen():
     tk.CTkButton(master,text='Customer',height=40,width=170,command=user,
                     text_color=('black'),corner_radius=20,
                     font=('Monotone',20)).pack(pady=20)
-
-    tst=tk.CTkLabel(master,text='').pack(pady=20)
 
 LoginScreen()
 master.mainloop()
