@@ -26,16 +26,12 @@ style.theme_use('default')
 style.configure('Treeview',background='#121212',foreground='white',rowheight=25,fieldbackground="#3d3d3d",font=('Arial',15))
 style.configure('Treeview.Heading',background="#373535",font=('Times New Roman',20, 'bold'),relief='flat')
 
-def getAllData():
-    global datap
-    global datab
+def getData():
+    global datap,datab,ids
     mycur.execute('select * from packages')
     datap=mycur.fetchall()
     mycur.execute('select * from bookings')
     datab=mycur.fetchall()
-
-def checkID():
-    global ids
     mycur.execute('select ID from packages')
     s=mycur.fetchall() 
     ids=[]
@@ -62,11 +58,11 @@ def adminPanel():
         packtable.column('Package_name',width=350)
         packtable.column('date',width=250)
         packtable.column('Price',width=150)
-        getAllData()
+        getData()
         for i in range(0,len(datap)):
             packtable.insert('','end',values=(datap[i][0],datap[i][1],datap[i][2],datap[i][3]))
         def removePackage():
-            checkID()
+            getData()
             if int(removeID.get()) in ids:
                 mycur.execute('delete from packages where ID=(%s)',(int(removeID.get()),))
                 mycon.commit()
@@ -76,7 +72,7 @@ def adminPanel():
                 view_edit_pack() 
                 tk.CTkLabel(master,text='The ID entered has not been made yet!').place(x=60,y=500)
         def insertPackage():
-            checkID()
+            getData()
             if int(id.get()) in ids:
                 view_edit_pack() 
                 tk.CTkLabel(master,text='ID is already selected, please try again!').place(x=60,y=275)             
@@ -131,7 +127,7 @@ def adminPanel():
         packtable.column('Email',width=200)
         packtable.column('Package_ID',width=150)
         packtable.column('Date',width=250)   
-        getAllData()
+        getData()
         for i in range(0,len(datab)):
             packtable.insert('','end',values=(datab[i][0],datab[i][1],datab[i][2],datab[i][3],datab[i][4],datab[i][5]))
         back=tk.CTkButton(master, text='Back',command=adminPanel,text_color=('black'))
@@ -177,7 +173,6 @@ def user():
     clear_frame()
     tk.CTkLabel(master,text='Customer Page',height=50,font=('Times New Roman',50)).pack(pady=0)
     tk.CTkButton(master,text='Back',text_color=('black'),command=LoginScreen).pack(pady=30)
-
 
 def LoginScreen():
     clear_frame()
