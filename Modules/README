@@ -1,1 +1,8 @@
 all the modules used.
+
+**EXCEPTION** PIL and the connectivity modules arent included due to their size being large. install them using pip install:
+
+PIL
+-> pip install pillow
+Connectivity
+-> pip install mysql-connector-python
