@@ -1,6 +1,6 @@
 create database AIT;
 use AIT;
-create table Bookings(ID int primary key,Name varchar(50),Phone int,Email varchar(50), Package_ID int, Date varchar(100));
+create table Bookings(ID int primary key,Name varchar(50),Phone varchar(100),Email varchar(50), Package_ID int, Date varchar(100));
 create table Packages(ID int primary key, Package_name varchar(100), date varchar(50),Price int);
 insert into Packages values(1,'Kerala-Gods own country','24/3/2024-28/5/2024',20000 ),
                             (2,'Rajasthan Odyssey','4/11/2024-8/11/2024',45000),
@@ -8,6 +8,6 @@ insert into Packages values(1,'Kerala-Gods own country','24/3/2024-28/5/2024',20
                             (4,'Meghalaya Mystique','5/3/2024-9/3/2024',10000),
                             (5,'Maharashtra Moments','31/1/2024-3/2/2024',34000),
                             (6, 'Bengal Breeze','9/9/2024-13/9/2024',9000);
-insert into Bookings values(1,'Anirudh S',9288009890,'anirudh@gmail.com',4,'5/3/2024-9/3/2024'),
-                            (2,'Sridev',9286709890,'sri@gmail.com',7,'12/5/2024-17/5/2024'),
-                            (3,'Ajmal',9288033390,'ajmalis@gmail.com',2,'4/11/2024-8/11/2024');
+insert into Bookings values(1,'Anirudh S','9288009890','anirudh@gmail.com',4,'5/3/2024-9/3/2024'),
+                            (2,'Sridev','9286709890','sri@gmail.com',7,'12/5/2024-17/5/2024'),
+                            (3,'Ajmal','9288033390','ajmalis@gmail.com',2,'4/11/2024-8/11/2024');
