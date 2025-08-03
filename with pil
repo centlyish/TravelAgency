@@ -1,0 +1,543 @@
+import tkinter as tk
+from tkinter import ttk, messagebox, filedialog
+import customtkinter as ctk
+import mysql.connector as sql
+from PIL import Image, ImageTk
+
+# ==== CONFIGURATION ====
+DB_CONFIG = {
+    'host': 'localhost',
+    'user': 'root',
+    'passwd': '712008',
+    'database': 'IIT'
+}
+ADMIN_CREDENTIALS = {'ajmal': 'ajmal', 's': 's', 'anirudh': 'anirudh'}
+THEME_COLOR = "#125e42"
+FONT_BIG = ("Montserrat", 38, 'bold')
+FONT_SMALL = ("Montserrat", 16)
+WINDOW_WIDTH, WINDOW_HEIGHT = 1100, 720
+
+# ==== INITIALIZATION ====
+mycon = sql.connect(**DB_CONFIG)
+mycur = mycon.cursor()
+ctk.set_default_color_theme('green')
+ctk.set_appearance_mode('dark')
+master = ctk.CTk()
+master.title('Travel Agency')
+master.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+
+def setup_treeview_style():
+    style = ttk.Style()
+    style.theme_use('default')
+    style.configure('Treeview',
+        background='#151f1f',
+        foreground='white',
+        rowheight=28,
+        fieldbackground="#263c3c",
+        font=('Segoe UI', 15)
+    )
+    style.configure('Treeview.Heading',
+        background="#1a2828",
+        font=("Segoe UI", 19, 'bold'),
+        relief='flat',
+        foreground="#18f07f"
+    )
+setup_treeview_style()
+
+def clear_frame():
+    for widget in master.winfo_children():
+        widget.destroy()
+
+def getData():
+    global datap, datab, ids
+    mycur.execute('select * from packages')
+    datap = mycur.fetchall()
+    mycur.execute('select * from bookings')
+    datab = mycur.fetchall()
+    mycur.execute('select ID from packages')
+    ids = [row[0] for row in mycur.fetchall()]
+
+def remove_duplicate_customers():
+    mycur.execute("""
+        DELETE b1 FROM bookings b1
+        INNER JOIN bookings b2
+        ON b1.Name = b2.Name AND b1.Phone = b2.Phone
+        AND b1.Email = b2.Email AND b1.ID > b2.ID
+    """)
+    mycon.commit()
+
+def show_message(msg, typ='info'):
+    if typ == 'error':
+        messagebox.showerror("Error", msg)
+    elif typ == 'success':
+        messagebox.showinfo("Success", msg)
+    else:
+        messagebox.showinfo("Info", msg)
+
+def load_banner_image():
+    try:
+        img = Image.open('banner_travel.png')
+        img = img.resize((620, 150), Image.Resampling.LANCZOS)
+        return ImageTk.PhotoImage(img)
+    except Exception:
+        return None
+
+def create_treeview(parent, columns, headings, widths, height=8):
+    tree = ttk.Treeview(parent, columns=columns, show='headings', height=height)
+    for col, head, wth in zip(columns, headings, widths):
+        tree.heading(col, text=head)
+        tree.column(col, width=wth)
+    scrollbar = ttk.Scrollbar(parent, orient='vertical', command=tree.yview)
+    tree.configure(yscrollcommand=scrollbar.set)
+    tree.pack(side="left", expand=True)
+    scrollbar.pack(side="right", fill="y")
+    return tree
+
+def LoginScreen():
+    clear_frame()
+    banner = load_banner_image()
+    if banner:
+        img_label = tk.Label(master, image=banner, bg=THEME_COLOR)
+        img_label.image = banner
+        img_label.pack(pady=8)
+    ctk.CTkLabel(master, text='The Travel Agency', font=FONT_BIG, fg_color=THEME_COLOR, text_color='white', corner_radius=25, width=700).pack(pady=18)
+    ctk.CTkLabel(master, text='Choose the user', font=("Montserrat", 26), text_color=THEME_COLOR).pack(pady=(25, 15))
+    ctk.CTkButton(master, text='Admin', corner_radius=25, height=46, width=210, font=("Montserrat", 20, "bold"), fg_color="#107f6d", text_color="white", command=adminLogin).pack(pady=18)
+    ctk.CTkButton(master, text='Customer', height=46, width=210, corner_radius=25, font=("Montserrat", 20, "bold"), fg_color="#106657", text_color="white", command=user).pack(pady=18)
+
+def adminLogin():
+    clear_frame()
+    ctk.CTkLabel(master, text='Admin Login', font=FONT_BIG, text_color=THEME_COLOR).pack(pady=25)
+    container = ctk.CTkFrame(master, fg_color="#152a25", corner_radius=15)
+    container.pack(pady=30)
+    ctk.CTkLabel(container, text='Username', font=FONT_SMALL).pack(pady=5)
+    username = ctk.CTkEntry(container, placeholder_text='Enter username')
+    username.pack(pady=6)
+    ctk.CTkLabel(container, text='Password', font=FONT_SMALL).pack(pady=5)
+    password = ctk.CTkEntry(container, placeholder_text='Enter password', show='*')
+    password.pack(pady=6)
+    ctk.CTkButton(container, text='Login', command=lambda: verify_admin(username.get(), password.get()), width=160, fg_color="#12ad5a", corner_radius=14).pack(pady=10)
+    ctk.CTkButton(container, text='Back', command=LoginScreen, fg_color="#e3e3e3", text_color="black").pack(pady=5)
+
+def verify_admin(username, password):
+    if username in ADMIN_CREDENTIALS and ADMIN_CREDENTIALS[username] == password:
+        show_message("Login Successful!", 'success')
+        adminPanel()
+    else:
+        show_message("Login Failed. Invalid admin credentials!", 'error')
+        adminLogin()
+
+def adminPanel():
+    clear_frame()
+    ctk.CTkLabel(master, text='Admin Dashboard', font=FONT_BIG, text_color=THEME_COLOR).pack(pady=20)
+    ctk.CTkButton(master, text='View/Edit Packages', font=FONT_SMALL, command=view_edit_pack, width=230, height=48).pack(pady=12)
+    ctk.CTkButton(master, text='View Bookings', font=FONT_SMALL, command=view_book, width=230, height=48).pack(pady=12)
+    ctk.CTkButton(master, text='View Customer Details', font=FONT_SMALL, command=view_cust, width=230, height=48).pack(pady=12)
+    ctk.CTkButton(master, text='Back', font=FONT_SMALL, command=LoginScreen, fg_color="#dadbd6", text_color="black", width=180).pack(pady=40)
+
+def view_edit_pack():
+    clear_frame()
+    ctk.CTkLabel(master, text='Package Editing', font=FONT_BIG, text_color=THEME_COLOR).pack()
+    table_frame = ctk.CTkFrame(master, width=700, height=300)
+    table_frame.pack(pady=(20, 8))
+    getData()
+    packtable = create_treeview(table_frame,
+        ('ID', 'Package_name', 'date', 'Price'),
+        ('ID', 'Package name', 'Date', 'Price'),
+        (60, 300, 250, 120),
+        height=6)
+    for row in datap:
+        packtable.insert('', 'end', values=row[:4])
+
+    form = ctk.CTkFrame(master, fg_color="#f2f2ed", width=460, height=300, corner_radius=10)
+    form.pack(pady=10)
+    ctk.CTkLabel(form, text="Add/Edit Package", font=("Montserrat", 20, "bold"), text_color=THEME_COLOR).grid(row=0, columnspan=2, pady=3)
+    id_entry = ctk.CTkEntry(form, placeholder_text='ID', width=80)
+    id_entry.grid(row=1, column=0, padx=6, pady=4)
+    name_entry = ctk.CTkEntry(form, placeholder_text='Name', width=180)
+    name_entry.grid(row=1, column=1, padx=6, pady=4)
+    date_entry = ctk.CTkEntry(form, placeholder_text='Date (YYYY-MM-DD)', width=130)
+    date_entry.grid(row=2, column=0, padx=6, pady=4)
+    price_entry = ctk.CTkEntry(form, placeholder_text='Price', width=100)
+    price_entry.grid(row=2, column=1, padx=6, pady=4)
+    desc_entry = ctk.CTkEntry(form, placeholder_text='Description', width=350)
+    desc_entry.grid(row=3, column=0, columnspan=2, padx=6, pady=4)
+    included_entry = ctk.CTkEntry(form, placeholder_text="Included", width=160)
+    included_entry.grid(row=4, column=0, padx=6, pady=4)
+    visiting_entry = ctk.CTkEntry(form, placeholder_text="Visiting", width=160)
+    visiting_entry.grid(row=4, column=1, padx=6, pady=4)
+    activities_entry = ctk.CTkEntry(form, placeholder_text="Activities", width=350)
+    activities_entry.grid(row=5, column=0, columnspan=2, padx=6, pady=4)
+    boarding_entry = ctk.CTkEntry(form, placeholder_text="Boarding Point", width=160)
+    boarding_entry.grid(row=6, column=0, padx=6, pady=4)
+    dropoff_entry = ctk.CTkEntry(form, placeholder_text="Drop-off Point", width=160)
+    dropoff_entry.grid(row=6, column=1, padx=6, pady=4)
+
+    img_paths = []
+
+    def browse_images():
+        nonlocal img_paths
+        files = filedialog.askopenfilenames(
+            title="Choose package images",
+            filetypes=[("Image Files", "*.jpg;*.jpeg;*.png;*.gif")]
+        )
+        img_paths = list(files)
+        show_message(f"Selected {len(img_paths)} image(s).", "info")
+    ctk.CTkButton(form, text='Add Images', command=browse_images, fg_color="#55bbee").grid(row=7, column=0, pady=6, padx=6, sticky="w")
+
+    editing_id = [None]  # To track which package is being edited
+
+    def fill_fields(selected):
+        pid = int(selected[0])
+        mycur.execute("SELECT * FROM packages WHERE ID=%s", (pid,))
+        p = mycur.fetchone()
+        if not p:
+            return
+        id_entry.delete(0, 'end')
+        id_entry.insert(0, str(p[0]))
+        name_entry.delete(0, 'end'); name_entry.insert(0, p[1])
+        date_entry.delete(0, 'end'); date_entry.insert(0, str(p[2]))
+        price_entry.delete(0, 'end'); price_entry.insert(0, str(p[3]))
+        desc_entry.delete(0, 'end'); desc_entry.insert(0, p[4] or "")
+        included_entry.delete(0, 'end'); included_entry.insert(0, p[5] or "")
+        visiting_entry.delete(0, 'end'); visiting_entry.insert(0, p[6] or "")
+        activities_entry.delete(0, 'end'); activities_entry.insert(0, p[7] or "")
+        boarding_entry.delete(0, 'end'); boarding_entry.insert(0, p[8] or "")
+        dropoff_entry.delete(0, 'end'); dropoff_entry.insert(0, p[9] or "")
+        id_entry.configure(state="disabled")
+        editing_id[0] = pid
+        btn_add.configure(text="Update Package", fg_color="#d4a515", command=updatePackage)
+
+    def on_table_select(event):
+        if not packtable.selection():
+            return
+        selected = packtable.item(packtable.selection()[0])['values']
+        fill_fields(selected)
+
+    packtable.bind("<<TreeviewSelect>>", on_table_select)
+
+    def reset_fields():
+        id_entry.configure(state="normal")
+        for widget in [id_entry, name_entry, date_entry, price_entry, desc_entry, included_entry,
+                       visiting_entry, activities_entry, boarding_entry, dropoff_entry]:
+            widget.delete(0, 'end')
+        editing_id[0] = None
+        btn_add.configure(text="Add Package", fg_color="#157658", command=insertPackage)
+
+    def insertPackage():
+        getData()
+        try:
+            id_text = id_entry.get().strip()
+            if not id_text.isdigit():
+                show_message('ID must be a numeric value!', 'error')
+                return
+            int_id = int(id_text)
+            if int_id in ids:
+                show_message('ID already exists!', 'error')
+                return
+            mycur.execute(
+                '''INSERT INTO packages (ID, Package_name, date, price, Description, Included, Visiting, Activities, Boarding, Dropoff)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
+                (int_id, name_entry.get(), date_entry.get(), int(price_entry.get()),
+                 desc_entry.get(), included_entry.get(), visiting_entry.get(),
+                 activities_entry.get(), boarding_entry.get(), dropoff_entry.get())
+            )
+            for img_path in img_paths:
+                mycur.execute('INSERT INTO PackageImages (PackageID, ImagePath) VALUES (%s, %s)', (int_id, img_path))
+            mycon.commit()
+            show_message('Package and images entered successfully!', 'success')
+            reset_fields()
+            view_edit_pack()
+        except Exception as e:
+            show_message(f"Error: {e}", "error")
+
+    def updatePackage():
+        pid = editing_id[0]
+        try:
+            mycur.execute('''UPDATE packages SET 
+                Package_name=%s, date=%s, price=%s, Description=%s, Included=%s, Visiting=%s,
+                Activities=%s, Boarding=%s, Dropoff=%s 
+                WHERE ID=%s''',
+                (name_entry.get(), date_entry.get(), int(price_entry.get()),
+                 desc_entry.get(), included_entry.get(), visiting_entry.get(),
+                 activities_entry.get(), boarding_entry.get(), dropoff_entry.get(), pid)
+            )
+            if img_paths:
+                mycur.execute("DELETE FROM PackageImages WHERE PackageID=%s", (pid,))
+                for img_path in img_paths:
+                    mycur.execute('INSERT INTO PackageImages (PackageID, ImagePath) VALUES (%s, %s)', (pid, img_path))
+            mycon.commit()
+            show_message("Package updated!", "success")
+            reset_fields()
+            view_edit_pack()
+        except Exception as e:
+            show_message(f"Error: {e}", "error")
+
+    btn_add = ctk.CTkButton(form, text='Add Package', command=insertPackage, fg_color="#157658")
+    btn_add.grid(row=7, column=1, pady=6, padx=6)
+
+    btn_clear = ctk.CTkButton(form, text='Clear', command=reset_fields, fg_color="#888888")
+    btn_clear.grid(row=8, column=1, pady=4, padx=6)
+
+    del_frame = ctk.CTkFrame(master, fg_color="#ededed", width=350, height=100, corner_radius=10)
+    del_frame.pack(pady=10)
+    ctk.CTkLabel(del_frame, text="Enter ID to Delete:", font=("Montserrat", 15)).grid(row=0, column=0, padx=8, pady=8)
+    del_entry = ctk.CTkEntry(del_frame, placeholder_text='ID', width=100)
+    del_entry.grid(row=0, column=1, padx=8, pady=8)
+
+    def removePackage():
+        getData()
+        id_text = del_entry.get().strip()
+        if not id_text.isdigit():
+            show_message("Enter a numeric ID!", "error")
+            return
+        int_id = int(id_text)
+        if int_id not in ids:
+            show_message("No such ID!", "error")
+            return
+        try:
+            mycur.execute('DELETE FROM PackageImages WHERE PackageID=%s', (int_id,))
+            mycur.execute('DELETE FROM packages WHERE ID=%s', (int_id,))
+            mycon.commit()
+            show_message('Package deleted!', 'success')
+            view_edit_pack()
+        except Exception as e:
+            show_message(f"Error: {e}", "error")
+
+    ctk.CTkButton(del_frame, text='Delete Package', fg_color="#fa2800", command=removePackage).grid(row=0, column=2, padx=8)
+    ctk.CTkButton(master, text='Back', command=adminPanel, text_color='black').pack(pady=15)
+
+def view_book():
+    clear_frame()
+    ctk.CTkLabel(master, text='Bookings', font=FONT_BIG, text_color=THEME_COLOR).pack()
+    table_frame = ctk.CTkFrame(master, width=950, height=450)
+    table_frame.pack(pady=14)
+    getData()
+    booktable = create_treeview(table_frame,
+        ('ID', 'Name', 'Phone', 'Email', 'Package_ID', 'Date'),
+        ('ID', 'Name', 'Phone', 'Email', 'Package ID', 'Date'),
+        (50, 130, 140, 200, 100, 180),
+        height=10)
+    for row in datab:
+        booktable.insert('', 'end', values=row[:6])
+    ctk.CTkButton(master, text='Back', command=adminPanel, text_color='black').pack(pady=18)
+
+def view_cust():
+    clear_frame()
+    remove_duplicate_customers()
+    ctk.CTkLabel(master, text='Customer Details', font=FONT_BIG, text_color=THEME_COLOR).pack(pady=15)
+    table_frame = ctk.CTkFrame(master, width=600, height=350)
+    table_frame.pack(pady=15)
+    getData()
+    cust_table = create_treeview(table_frame,
+        ('Name', 'Phone', 'Email'),
+        ('Name', 'Phone', 'Email'),
+        (180, 165, 220),
+        height=9
+    )
+    seen = set()
+    for row in datab:
+        key = (row[1], row[2], row[3])
+        if key not in seen:
+            seen.add(key)
+            cust_table.insert('', 'end', values=key)
+    ctk.CTkButton(master, text='Back', command=adminPanel, text_color='black').pack(pady=15)
+
+def user():
+    clear_frame()
+    ctk.CTkLabel(
+        master, text='✈️ Welcome to Travel Explorer',
+        font=("Montserrat", 38, "bold"),
+        text_color="#29e8c7"
+    ).pack(pady=(20, 10))
+    ctk.CTkLabel(
+        master, text='Explore Packages & Book Instantly!',
+        font=("Montserrat", 23, "italic"),
+        text_color="#c8faf4"
+    ).pack(pady=(0, 18))
+    scroll_frame = ctk.CTkScrollableFrame(
+        master, width=1030, height=490,
+        orientation=ctk.VERTICAL,
+        fg_color="#132232",
+        border_width=0
+    )
+    scroll_frame.pack(side="top", fill="both", expand=True, padx=0, pady=(0, 0))
+    getData()
+    cover_imgs = {}
+    all_imgs = {}
+    for row in datap:
+        pid = row[0]
+        mycur.execute("SELECT ImagePath FROM PackageImages WHERE PackageID=%s", (pid,))
+        imgs = mycur.fetchall()
+        all_imgs[pid] = [x[0] for x in imgs] if imgs else []
+        cover_imgs[pid] = imgs[0][0] if imgs else None
+    card_w, card_h = 380, 350
+    img_size = (330, 160)
+    def show_package_popup(package):
+        pid, pname, pdate, price = package[0], package[1], package[2], package[3]
+        popup = tk.Toplevel(master)
+        popup.title(f"Details: {pname}")
+        popup.geometry("780x780")
+        popup.grab_set()
+        popup.config(bg='#19212e')
+        img = None
+        if cover_imgs.get(pid):
+            try:
+                mainimg = Image.open(cover_imgs[pid])
+                mainimg.thumbnail((410, 250))
+                img = ImageTk.PhotoImage(mainimg)
+            except Exception:
+                img = None
+        tk.Label(popup, image=img, bg='#19212e').pack(pady=10)
+        if img:
+            popup.img = img
+        paths = all_imgs.get(pid, [])
+        if len(paths) > 1:
+            imgrow_canvas = tk.Canvas(popup, bg='#19212e', highlightthickness=0, width=700, height=110)
+            imgrow_canvas.pack()
+            imgrow_frame = tk.Frame(imgrow_canvas, bg='#19212e')
+            imgrow_canvas.create_window((0, 0), window=imgrow_frame, anchor='nw')
+            imgs_ref = []
+            def on_img_frame_configure(event):
+                imgrow_canvas.configure(scrollregion=imgrow_canvas.bbox("all"))
+            imgrow_frame.bind("<Configure>", on_img_frame_configure)
+            scrollbar = tk.Scrollbar(popup, orient="horizontal", command=imgrow_canvas.xview)
+            imgrow_canvas.configure(xscrollcommand=scrollbar.set)
+            scrollbar.pack(fill='x')
+            for path in paths:
+                try:
+                    im = Image.open(path)
+                    im.thumbnail((120, 90))
+                    cim = ImageTk.PhotoImage(im)
+                    lbl = tk.Label(imgrow_frame, image=cim, bg='#19212e')
+                    lbl.pack(side='left', padx=10)
+                    imgs_ref.append(cim)
+                except:
+                    pass
+            imgrow_frame.imgs_ref = imgs_ref
+        area = ctk.CTkFrame(popup, fg_color='#232a3c', width=700, height=430, corner_radius=14)
+        area.pack(pady=18)
+        ctk.CTkLabel(area, text=f"{pname}", font=("Montserrat", 20, "bold"),
+                     text_color="#54ffe9").place(x=34, y=12)
+        ctk.CTkLabel(area, text=f"Date: {pdate}", font=("Montserrat", 13)).place(x=34, y=48)
+        ctk.CTkLabel(area, text=f"Price: ₹{price:,}", font=("Montserrat", 13)).place(x=234, y=48)
+        mycur.execute("SELECT Description, Included, Visiting, Activities, Boarding, Dropoff FROM packages WHERE ID=%s", (pid,))
+        row = mycur.fetchone()
+        desc = row[0] if row and row[0] else "No description available."
+        included = row[1] if row and len(row) > 1 and row[1] else "Not specified."
+        visiting = row[2] if row and len(row) > 2 and row[2] else "Not specified."
+        activities = row[3] if row and len(row) > 3 and row[3] else "Not specified."
+        boarding = row[4] if row and len(row) > 4 and row[4] else "Not specified."
+        dropoff = row[5] if row and len(row) > 5 and row[5] else "Not specified."
+        ybase = 80
+        ctk.CTkLabel(area, text=f"Description:\n{desc}", font=("Montserrat", 13), wraplength=630,
+                     text_color="#97bee0").place(x=34, y=ybase)
+        ctk.CTkLabel(area, text=f"What's Included:\n{included}", font=("Montserrat", 13), wraplength=320,
+                     text_color="#8cf7c1").place(x=34, y=ybase + 100)
+        ctk.CTkLabel(area, text=f"Places Visiting:\n{visiting}", font=("Montserrat", 13), wraplength=320,
+                     text_color="#ffb899").place(x=378, y=ybase + 100)
+        ctk.CTkLabel(area, text=f"Activities:\n{activities}", font=("Montserrat", 13), wraplength=320,
+                     text_color="#94b6ff").place(x=34, y=ybase + 195)
+        ctk.CTkLabel(area, text=f"Boarding Point: {boarding}", font=("Montserrat", 13), wraplength=310,
+                     text_color="#40e0d0").place(x=378, y=ybase + 195)
+        ctk.CTkLabel(area, text=f"Drop-off Point: {dropoff}", font=("Montserrat", 13), wraplength=310,
+                     text_color="#b880fc").place(x=34, y=ybase + 270)
+        def book_popup():
+            popup.destroy()
+            show_booking_form(package)
+        ctk.CTkButton(popup, text="Book This Package", fg_color="#00bb8f", font=("Montserrat", 18, "bold"), width=220,
+                      height=46, corner_radius=17, command=book_popup).pack(pady=18)
+        ctk.CTkButton(popup, text="Close", fg_color="#bbbbbb", text_color="black", width=85, command=popup.destroy).pack()
+    def show_booking_form(package):
+        pid, pname, pdate, price = package[0], package[1], package[2], package[3]
+        popup = tk.Toplevel(master)
+        popup.title(f"Book: {pname}")
+        popup.geometry("430x420")
+        popup.grab_set()
+        ctk.CTkLabel(popup, text=f"Book '{pname}'", font=("Montserrat", 22, "bold"),
+                     text_color="#31ffe9").pack(pady=18)
+        namef = ctk.CTkEntry(popup, placeholder_text='Your Name')
+        phonef = ctk.CTkEntry(popup, placeholder_text='Phone')
+        emailf = ctk.CTkEntry(popup, placeholder_text='Email')
+        datef = ctk.CTkEntry(popup, placeholder_text='Preferred Date (YYYY-MM-DD)')
+        for w in (namef, phonef, emailf, datef):
+            w.pack(pady=7)
+        def do_bk():
+            getData()
+            try:
+                mycur.execute(
+                    'INSERT INTO bookings (Name, Phone, Email, Package_ID, Date) VALUES (%s, %s, %s, %s, %s)',
+                    (namef.get(), phonef.get(), emailf.get(), pid, datef.get())
+                )
+                mycon.commit()
+                show_message("Booking Successful! Thank you!", "success")
+                popup.destroy()
+                user()
+            except Exception:
+                show_message("Please check your input fields.", "error")
+        ctk.CTkButton(popup, text='Confirm Booking', fg_color="#00bb8f", font=("Montserrat", 17, "bold"), command=do_bk).pack(
+            pady=20)
+        ctk.CTkButton(popup, text='Cancel', fg_color="#bbbbbb", text_color="black", command=popup.destroy).pack()
+    ncols = 2
+    padx, pady = 20, 26
+    for i, pack in enumerate(datap):
+        row, col = divmod(i, ncols)
+        card = ctk.CTkFrame(
+            scroll_frame,
+            width=380, height=350,
+            fg_color="#2c3651",
+            border_color="#11eac5", border_width=2,
+            corner_radius=18)
+        card.grid(row=row, column=col, padx=padx, pady=pady, sticky="nw")
+        cimg = None
+        imglbl = None
+        if cover_imgs.get(pack[0]):
+            try:
+                pimg = Image.open(cover_imgs[pack[0]])
+                pimg.thumbnail(img_size)
+                cimg = ImageTk.PhotoImage(pimg)
+                imglbl = tk.Label(card, image=cimg, cursor="hand2", bg="#2c3651")
+                imglbl.image = cimg
+                imglbl.place(x=23, y=16, width=img_size[0], height=img_size[1])
+            except Exception:
+                pass
+        if not cimg:
+            tk.Label(card, text="No Image", font=("Arial", 14), fg="#888888",
+                     bg="#2c3651").place(x=23, y=16, width=img_size[0], height=img_size[1])
+        card.bind("<Button-1>", lambda e, p=pack: show_package_popup(p))
+        if imglbl:
+            imglbl.bind("<Button-1>", lambda e, p=pack: show_package_popup(p))
+        ctk.CTkLabel(
+            card, text=f"{pack[1]}", font=("Montserrat", 18, "bold"),
+            text_color="#3be9ad"
+        ).place(x=25, y=img_size[1] + 23)
+        ctk.CTkLabel(
+            card, text=f"₹{pack[3]:,}", font=("Montserrat", 17, 'bold'),
+            text_color="#ffae73"
+        ).place(x=230, y=img_size[1] + 27)
+        ctk.CTkLabel(card, text=f"Date: {pack[2]}", font=("Montserrat", 13)).place(x=25, y=img_size[1] + 57)
+        mycur.execute("SELECT Description FROM packages WHERE ID=%s", (pack[0],))
+        desc = mycur.fetchone()
+        desc = desc[0][:85] + "..." if desc and len(desc[0]) > 88 else (desc[0] if desc else "No description")
+        ctk.CTkLabel(card, text=desc, font=("Montserrat", 12, 'italic'), wraplength=320,
+                     text_color="#c4eeee"
+                     ).place(x=24, y=img_size[1] + 84)
+        ctk.CTkButton(
+            card, text="Book Now", width=110, height=38, corner_radius=14, fg_color="#15be98",
+            font=("Montserrat", 15, "bold"),
+            command=lambda p=pack: show_booking_form(p)
+        ).place(x=120, y=card_h - 52)
+    nav_row = ctk.CTkFrame(
+        master, fg_color="#22253b", height=80
+    )
+    nav_row.pack(side="bottom", fill="x")
+    ctk.CTkButton(
+        nav_row, text="⬅ Back", width=320, height=62,
+        fg_color="#37a8ff", text_color="#fff",
+        font=("Montserrat", 24, "bold"),
+        corner_radius=18,
+        command=LoginScreen
+    ).pack(side="top", padx=0, pady=14)
+
+LoginScreen()
+master.mainloop()
