@@ -14,8 +14,6 @@ DB_CONFIG = {
 }
 
 ADMIN_CREDENTIALS = {'ajmal': 'ajmal', 'anirudh': 'anirudh', 's': 's'}
-USER_DETAILS={'names':[],'pass':[],'emails':[]}
-LOGGED_IN=False
 THEME_COLOR = "#125e42"
 FONT_BIG = ("Montserrat", 38, 'bold')
 FONT_SMALL = ("Montserrat", 16)
@@ -63,13 +61,15 @@ def show_message(msg, typ='info'):
         messagebox.showinfo("Info", msg)
 
 def getData():
-    global datap, datab, ids
+    global datap, datab, ids, datac
     mycur.execute('SELECT * FROM packages')
     datap = mycur.fetchall()
     mycur.execute('SELECT * FROM bookings')
     datab = mycur.fetchall()
     mycur.execute('SELECT ID FROM packages')
     ids = [row[0] for row in mycur.fetchall()]
+    mycur.execute('select * from customers')
+    datac=mycur.fetchall()
 
 def remove_duplicate_customers():
     mycur.execute("""
@@ -92,6 +92,7 @@ def create_treeview(parent, columns, headings, widths, height=8):
     return tree
 
 # ==== CUSTOMER LOGIN SCREEN ====
+id=0
 
 def signup_customer():
     clear_frame()
@@ -102,25 +103,29 @@ def signup_customer():
     cust_name_s = ctk.CTkEntry(container, placeholder_text='Enter your name')
     cust_name_s.pack(pady=6)
     ctk.CTkLabel(container, text='Password', font=FONT_SMALL).pack(pady=5)
-    cust_pass_s = ctk.CTkEntry(container, placeholder_text='Enter your password')
+    cust_pass_s = ctk.CTkEntry(container, placeholder_text='Enter your password', show='*')
     cust_pass_s.pack(pady=6)
     ctk.CTkLabel(container, text='Email Address', font=FONT_SMALL).pack(pady=5)
     cust_email_s = ctk.CTkEntry(container, placeholder_text='Enter your email')
     cust_email_s.pack(pady=6)
-
     def sign_up():
+        getData()
+        global id
+        global datac
         name = cust_name_s.get().strip()
         passw=cust_pass_s.get().strip()
         email = cust_email_s.get().strip()
+        for i in datac:
+                for j in i:
+                    if j==name:
+                        id=i[-1].index(i[-1][0])+1
+                        break 
         if not name or not email or not passw:
             show_message("Please enter both name and email!", "error")
             return
-        global USER_DETAILS
-        global LOGGED_IN
         global current_customer
-        USER_DETAILS["names"].append(name)        
-        USER_DETAILS['pass'].append(passw)
-        USER_DETAILS['emails'].append(email)
+        mycur.execute('insert into customers values ((%s),(%s),(%s),(%s))',(id,name,passw,email))
+        mycon.commit()
         current_customer=(name,passw)
         user()
 
@@ -141,25 +146,27 @@ def customerLogin():
     cust_name_l = ctk.CTkEntry(container, placeholder_text='Enter your name')
     cust_name_l.pack(pady=6)
     ctk.CTkLabel(container, text='Password', font=FONT_SMALL).pack(pady=5)
-    cust_pass_l = ctk.CTkEntry(container, placeholder_text='Enter your password')
+    cust_pass_l = ctk.CTkEntry(container, placeholder_text='Enter your password', show='*')
     cust_pass_l.pack(pady=6)
     def login_customer():
+        getData()
         global current_customer
+        global datac
         name = cust_name_l.get().strip()
         passw = cust_pass_l.get().strip()
         if not name or not passw:
             show_message("Please enter both name and email!", "error")
             return
-        if name in USER_DETAILS["names"] and passw in USER_DETAILS["pass"]:
-            if USER_DETAILS['names'].index(name) == USER_DETAILS['pass'].index(passw):
-                current_customer=(name,passw)
-                user()
-            else:
-                show_message('The password/user is incorrect try again!','error')
-                customerLogin()
+        for i in datac:
+            if name in i and passw in i:
+                if name == i[1] and passw == i[2]:
+                    current_customer=(name,passw)
+                    user()
+                    break
         else:
             show_message('The password/user is incorrect try again!','error')
-            customerLogin()  
+            customerLogin()
+        
     ctk.CTkButton(container, text='Login In',
                   command=login_customer,
                   width=160, fg_color="#12ad5a", corner_radius=14).pack(pady=10)
@@ -606,6 +613,7 @@ def user():
         for j in datab:
             l.append(j[1])
         print(l)
+
         if str(current_customer[0]) in l:
             ctk.CTkLabel(master,text='Cancel Booking',font=("Montserrat", 24, "bold")).pack(pady=10)
             ctk.CTkLabel(master,text='Your current trip will be cancelled').pack(pady=10)
@@ -614,8 +622,6 @@ def user():
             ctk.CTkLabel(master,text='You have not booked anything yet.',font=("Montserrat", 24, "bold")).pack(pady=10)
 
         ctk.CTkButton(master, text="⬅ Back to Packages", fg_color="#94a3b8", text_color="black", font=FONT_BOLD, width=240, command=user).pack(pady=(0, 20))
-
-
 
     ctk.CTkLabel(master, text='✈️ Welcome to Travel Explorer', font=("Montserrat", 38, "bold"), text_color="#29e8c7").pack(pady=(15, 7))
     ctk.CTkLabel(master, text='Explore Packages & Book Instantly!', font=("Montserrat", 22, "italic"), text_color="#c8faf4").pack(pady=(0, 10))
@@ -688,5 +694,3 @@ master.bind('<Shift-U>', lambda e: user())
 
 LoginScreen()
 master.mainloop()
-
-
