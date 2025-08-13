@@ -92,7 +92,6 @@ def create_treeview(parent, columns, headings, widths, height=8):
     return tree
 
 # ==== CUSTOMER LOGIN SCREEN ====
-id=0
 
 def signup_customer():
     clear_frame()
