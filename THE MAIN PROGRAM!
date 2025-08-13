@@ -110,21 +110,15 @@ def signup_customer():
     cust_email_s.pack(pady=6)
     def sign_up():
         getData()
-        global id
         global datac
         name = cust_name_s.get().strip()
         passw=cust_pass_s.get().strip()
         email = cust_email_s.get().strip()
-        for i in datac:
-                for j in i:
-                    if j==name:
-                        id=i[-1].index(i[-1][0])+1
-                        break 
         if not name or not email or not passw:
             show_message("Please enter both name and email!", "error")
             return
         global current_customer
-        mycur.execute('insert into customers values ((%s),(%s),(%s),(%s))',(id,name,passw,email))
+        mycur.execute('insert into customers (name,password,email) values ((%s),(%s),(%s))',(name,passw,email))
         mycon.commit()
         current_customer=(name,passw)
         user()
