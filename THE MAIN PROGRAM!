@@ -9,7 +9,7 @@ import datetime
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',
-    'passwd': '1864',  # Change to your MySQL password
+    'passwd': '712008',  # Change to your MySQL password
     'database': 'IIT'
 }
 
@@ -615,9 +615,15 @@ def user():
             ctk.CTkLabel(master,text='You have not booked anything yet.',font=("Montserrat", 24, "bold")).pack(pady=10)
 
         ctk.CTkButton(master, text="⬅ Back to Packages", fg_color="#94a3b8", text_color="black", font=FONT_BOLD, width=240, command=user).pack(pady=(0, 20))
-
+    
     ctk.CTkLabel(master, text='✈️ Welcome to Travel Explorer', font=("Montserrat", 38, "bold"), text_color="#29e8c7").pack(pady=(15, 7))
     ctk.CTkLabel(master, text='Explore Packages & Book Instantly!', font=("Montserrat", 22, "italic"), text_color="#c8faf4").pack(pady=(0, 10))
+
+    # SEARCH BAR ADDITION
+    search_var = tk.StringVar()
+    search_entry = ctk.CTkEntry(master, placeholder_text='Search Packages', textvariable=search_var, width=400)
+    search_entry.pack(pady=(7,5))
+    
     scroll_frame = ctk.CTkScrollableFrame(master, width=1030, height=440, orientation=ctk.VERTICAL,
                                           fg_color="#132232", border_width=0)
     scroll_frame.pack(side="top", fill="both", expand=True, padx=5, pady=(0,0))
@@ -636,40 +642,49 @@ def user():
         cover_imgs[pid] = all_imgs[pid][0] if all_imgs[pid] else None
     card_w, card_h = 380, 350
     img_size = (330, 160)
-    def package_card_click(p):
-        package_details_page(p)
     ncols = 3
     padx, pady = 13, 13
-    for i, pack in enumerate(datap):
-        row, col = divmod(i, ncols)
-        card = ctk.CTkFrame(scroll_frame, width=360, height=320, fg_color="#2c3651",
-                            border_color="#11eac5", border_width=2, corner_radius=18)
-        card.grid(row=row, column=col, padx=padx, pady=pady, sticky="nw")
-        imgs = all_imgs.get(pack[0], [])[:3]
-        def open_viewer_factory(imgs, idx):
-            return lambda e: show_image_viewer(imgs, idx=idx, title=pack[1])
-        for j, imgpath in enumerate(imgs):
-            try:
-                img = Image.open(imgpath)
-                img.thumbnail((108,65))
-                pt = ImageTk.PhotoImage(img)
-                lbl = tk.Label(card, image=pt, cursor="hand2", bg="#2c3651")
-                lbl.image = pt
-                lbl.place(x=22+110*j, y=19, width=98, height=65)
-                lbl.bind("<Button-1>", open_viewer_factory(imgs, j))
-            except:
-                pass
-        ctk.CTkLabel(card, text=f"{pack[1]}", font=("Montserrat", 17, "bold"), text_color="#3be9ad").place(x=20, y=100)
-        ctk.CTkLabel(card, text=f"₹{pack[3]:,}", font=("Montserrat", 16, "bold"), text_color="#ffae73").place(x=200, y=100)
-        ctk.CTkLabel(card, text=f"Date: {pack[2]}", font=("Montserrat", 14), text_color="#c8faf4").place(x=20, y=135)
-        mycur.execute("SELECT Description FROM packages WHERE ID=%s", (pack[0],))
-        desc = mycur.fetchone()
-        desc = desc[0][:90] + "..." if desc and len(desc[0]) > 93 else (desc[0] if desc else "No description")
-        ctk.CTkLabel(card, text=desc, font=("Montserrat", 11, 'italic'), wraplength=310, text_color="#c4eeee").place(x=20, y=170)
-        ctk.CTkButton(card, text="Details", width=90, height=34, corner_radius=10,
-                      fg_color="#21c188", font=("Montserrat", 12, "bold"),
-                      command=lambda p=pack: package_details_page(p)).place(x=130, y=265)
-        card.bind("<Button-1>", lambda e, p=pack: package_card_click(p))
+
+    # FILTER FUNCTION
+    def filter_packages(*args):
+        query = search_var.get().strip().lower()
+        for child in scroll_frame.winfo_children():
+            child.destroy()
+        for i, pack in enumerate(datap):
+            if query in pack[1].lower():
+                row, col = divmod(i, ncols)
+                card = ctk.CTkFrame(scroll_frame, width=360, height=320, fg_color="#2c3651",
+                                    border_color="#11eac5", border_width=2, corner_radius=18)
+                card.grid(row=row, column=col, padx=padx, pady=pady, sticky="nw")
+                imgs = all_imgs.get(pack[0], [])[:3]
+                def open_viewer_factory(imgs, idx):
+                    return lambda e: show_image_viewer(imgs, idx=idx, title=pack[1])
+                for j, imgpath in enumerate(imgs):
+                    try:
+                        img = Image.open(imgpath)
+                        img.thumbnail((108,65))
+                        pt = ImageTk.PhotoImage(img)
+                        lbl = tk.Label(card, image=pt, cursor="hand2", bg="#2c3651")
+                        lbl.image = pt
+                        lbl.place(x=22+110*j, y=19, width=98, height=65)
+                        lbl.bind("<Button-1>", open_viewer_factory(imgs, j))
+                    except:
+                        pass
+                ctk.CTkLabel(card, text=f"{pack[1]}", font=("Montserrat", 17, "bold"), text_color="#3be9ad").place(x=20, y=100)
+                ctk.CTkLabel(card, text=f"₹{pack[3]:,}", font=("Montserrat", 16, "bold"), text_color="#ffae73").place(x=200, y=100)
+                ctk.CTkLabel(card, text=f"Date: {pack[2]}", font=("Montserrat", 14), text_color="#c8faf4").place(x=20, y=135)
+                mycur.execute("SELECT Description FROM packages WHERE ID=%s", (pack[0],))
+                desc = mycur.fetchone()
+                desc = desc[0][:90] + "..." if desc and len(desc[0]) > 93 else (desc[0] if desc else "No description")
+                ctk.CTkLabel(card, text=desc, font=("Montserrat", 11, 'italic'), wraplength=310, text_color="#c4eeee").place(x=20, y=170)
+                ctk.CTkButton(card, text="Details", width=90, height=34, corner_radius=10,
+                              fg_color="#21c188", font=("Montserrat", 12, "bold"),
+                              command=lambda p=pack: package_details_page(p)).place(x=130, y=265)
+                card.bind("<Button-1>", lambda e, p=pack: package_details_page(p))
+
+    search_var.trace_add("write", filter_packages)
+    filter_packages()  # Show all packages by default
+
     nav_row = ctk.CTkFrame(master, fg_color="#22253b", height=80)
     nav_row.pack(side="bottom", fill="x")
     ctk.CTkButton(nav_row, text="⬅ Back", width=320, height=62, fg_color="#37a8ff",
